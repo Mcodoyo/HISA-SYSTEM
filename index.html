@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HISA - 50 Chamas System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+<div id="configScreen" class="min-h-screen flex items-center justify-center p-4">
+<div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+<h1 class="text-3xl font-bold text-center">HISA</h1>
+<p class="text-center text-gray-600 mb-6">50 Chamas Management</p>
+<input id="supaUrl" placeholder="https://xxxxx.supabase.co" class="w-full p-3 border rounded-lg mb-3">
+<input id="supaKey" placeholder="Supabase Anon Key" class="w-full p-3 border rounded-lg mb-3">
+<button onclick="saveConfig()" class="w-full bg-green-600 text-white p-3 rounded-lg font-bold">Connect & Launch</button>
+</div>
+</div>
+<div id="mainApp" class="hidden">
+<header class="bg-green-700 text-white p-4 flex justify-between"><h1>HISA SYSTEM</h1><button onclick="localStorage.clear();location.reload()" class="bg-white/20 px-3 py-1 rounded">Logout</button></header>
+<div class="p-4 grid grid-cols-2 gap-4">
+<div class="bg-white p-4 rounded-xl shadow"><p>Total Chamas</p><p id="statChamas" class="text-2xl font-bold">0/50</p></div>
+<div class="bg-white p-4 rounded-xl shadow"><p>Members</p><p id="statMembers" class="text-2xl font-bold">0</p></div>
+</div>
+<div class="p-4"><div class="bg-white rounded-xl shadow p-4"><div class="flex justify-between mb-4"><h2 class="font-bold">Chamas</h2><button onclick="showAddChama()" class="bg-green-600 text-white px-4 py-2 rounded-lg">+ New</button></div><div id="chamaList"></div></div></div>
+</div>
+<script>
+let supabaseClient=null;
+function saveConfig(){const u=document.getElementById('supaUrl').value.trim(),k=document.getElementById('supaKey').value.trim();localStorage.setItem('HISA_URL',u);localStorage.setItem('HISA_KEY',k);connectSupa(u,k);}
+function connectSupa(u,k){supabaseClient=supabase.createClient(u,k);document.getElementById('configScreen').classList.add('hidden');document.getElementById('mainApp').classList.remove('hidden');loadData();}
+async function loadData(){const{data:c}=await supabaseClient.from('chamas').select('*').limit(50);const{data:m}=await supabaseClient.from('members').select('*');document.getElementById('statChamas').innerText=(c?.length||0)+'/50';document.getElementById('statMembers').innerText=m?.length||0;document.getElementById('chamaList').innerHTML=c?.length?c.map(x=>`<div class="border p-3 rounded-lg flex justify-between"><div><p class="font-bold">${x.name}</p><p class="text-xs">${x.location||''}</p></div></div>`).join(''):'<p>No chamas</p>';}
+async function showAddChama(){const n=prompt('Chama Name:');if(!n)return;const l=prompt('Location:')||'';const{error}=await supabaseClient.from('chamas').insert([{name:n,location:l}]);if(error)alert(error.message);else loadData();}
+(function(){const u=localStorage.getItem('HISA_URL'),k=localStorage.getItem('HISA_KEY');if(u&&k){document.getElementById('supaUrl').value=u;document.getElementById('supaKey').value=k;connectSupa(u,k);}})();
+</script>
+</body>
+</html>
